@@ -151,3 +151,15 @@ BEGIN
     );
 END;
 /
+
+-- Trigger 5: Automatically calculate 2.5% platform commission and workshop payouts on payment records
+CREATE OR REPLACE TRIGGER trg_calculate_payment_commission
+BEFORE INSERT OR UPDATE ON payments
+FOR EACH ROW
+BEGIN
+    :new.commission_rate := 2.50;
+    :new.commission_amount := ROUND(:new.total_amount * 0.025, 2);
+    :new.workshop_amount := :new.total_amount - :new.commission_amount;
+END;
+/
+
