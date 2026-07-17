@@ -179,4 +179,19 @@ class AdminController extends Controller
         $logs = AuditLog::with('user')->latest()->paginate(30);
         return view('admin.audit_logs', compact('logs'));
     }
+
+    public function verifyWorkshop(Request $request, Workshop $workshop)
+    {
+        $request->validate([
+            'is_verified' => 'required|boolean',
+        ]);
+
+        $old = $workshop->is_verified;
+        $workshop->update(['is_verified' => $request->is_verified]);
+
+        AuditLog::log('updated', $workshop, ['is_verified' => $old], ['is_verified' => $request->is_verified]);
+
+        $statusStr = $request->is_verified ? 'verified' : 'unverified';
+        return redirect()->back()->with('success', "Workshop \"{$workshop->name}\" status set to " . $statusStr . ".");
+    }
 }

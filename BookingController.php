@@ -56,11 +56,38 @@ class BookingController extends Controller
         $data['user_id'] = auth()->id();
         $data['status']  = 'pending';
 
+        // Store the upfront estimate if available
+        $estimate = \App\Models\ServiceEstimate::where('workshop_id', $data['workshop_id'])
+                                               ->where('service_type', $data['service_type'])
+                                               ->first();
+        if ($estimate) {
+            $data['estimated_cost'] = ($estimate->min_price + $estimate->max_price) / 2;
+        }
+
         $booking = Booking::create($data);
         AuditLog::log('created', $booking, [], $data);
 
         return redirect()->route('bookings.index')
                          ->with('success', 'Booking created! Awaiting workshop approval.');
+    }
+
+    // AJAX endpoint — returns price estimate for a given workshop + service type
+    public function getEstimate(Request $request)
+    {
+        $estimate = \App\Models\ServiceEstimate::where('workshop_id', $request->workshop_id)
+                                               ->where('service_type', $request->service_type)
+                                               ->first();
+        if (!$estimate) {
+            return response()->json(['found' => false]);
+        }
+
+        return response()->json([
+            'found'          => true,
+            'min_price'      => $estimate->min_price,
+            'max_price'      => $estimate->max_price,
+            'duration_hours' => $estimate->duration_hours,
+            'price_range'    => $estimate->priceRange(),
+        ]);
     }
 
     public function show(Booking $booking)

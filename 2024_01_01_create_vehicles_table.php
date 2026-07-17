@@ -13,7 +13,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->string('make');               // Toyota, Honda, etc.
             $table->string('model');              // Corolla, Civic, etc.
-            $table->year('year');
+            $table->smallInteger('year');   // Oracle has no YEAR type; smallInteger covers 1900-2100
             $table->string('registration_number')->unique();
             $table->string('chassis_number')->unique();
             $table->string('color')->nullable();
